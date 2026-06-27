@@ -69,11 +69,11 @@
 <meta property="og:description" content="독성 가스 분류 학습 툴"/>
 <title>독성 가스 분류</title>
 <meta name="description" content="독성 가스 분류 학습 툴"/>
-<meta property="og:image" content="https://jinyizan.github.io/toxicgas/og-image-00qgn4h6.png"/>
+<meta property="og:image" content="https://jinyizan.github.io/toxicgas/og-image-00ese0gx.png"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:image" content="https://jinyizan.github.io/toxicgas/og-image-00qgn4h6.png"/>
+<meta name="twitter:image" content="https://jinyizan.github.io/toxicgas/og-image-00ese0gx.png"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2032%2032'%3E%3Crect%20width%3D'32'%20height%3D'32'%20rx%3D'6'%20fill%3D'%2310b981'%2F%3E%3Ctext%20x%3D'16'%20y%3D'22'%20text-anchor%3D'middle'%20font-size%3D'18'%20fill%3D'white'%20font-family%3D'sans-serif'%3E%E2%98%A0%3C%2Ftext%3E%3C%2Fsvg%3E"/>
 <script src="https://cdn.tailwindcss.com"></script>
 </head><body><!DOCTYPE html>
@@ -138,6 +138,7 @@
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             border: 2px solid;
+            cursor: pointer;
         }
         .drawer-title {
             color: #fff;
@@ -145,6 +146,7 @@
             text-align: center;
             font-weight: bold;
             margin: 0;
+            cursor: pointer;
         }
         .drawer-content {
             flex-grow: 1;
@@ -154,7 +156,6 @@
             flex-wrap: wrap;
             align-content: flex-start;
             gap: 10px;
-            cursor: pointer;
         }
 
         /* 서랍별 색상 테마 적용 */
@@ -174,7 +175,7 @@
         #box-systemic .drawer-title { background-color: #9b59b6; }
         #box-systemic .drawer-content { background-color: #f5eef8; }
 
-        /* 키워드(단어) 스타일 - 가독성 향상 */
+        /* 키워드(단어) 스타일 */
         .keyword {
             background-color: #ffffff;
             color: #2c3e50;
@@ -194,7 +195,7 @@
             border-color: #95a5a6;
         }
         
-        /* 키워드 선택되었을 때 스타일 (클릭) */
+        /* 키워드 선택되었을 때 스타일 */
         .keyword.selected {
             background-color: #fff3cd;
             border-color: #ffc107;
@@ -250,7 +251,8 @@
 
     <h1>Toxic Gas 분류 학습 툴 🧪</h1>
     <p class="instructions">
-        👉 <strong>이동 방법:</strong> 키워드를 <strong>클릭</strong>하여 선택한 뒤, 넣고 싶은 서랍을 <strong>클릭</strong>하세요. (드래그 앤 드롭도 가능합니다!)<br>
+        👉 <strong>이동:</strong> 키워드를 <strong>클릭</strong>하여 선택한 뒤, 넣고 싶은 <strong>서랍을 클릭</strong>하세요.<br>
+        💡 <strong>취소:</strong> 서랍에 넣은 키워드를 <strong>더블클릭</strong>하면 다시 단어장으로 돌아옵니다.<br>
         분류 도중 언제든지 <strong>[채점하기]</strong> 버튼을 눌러 중간 점검을 할 수 있습니다.
     </p>
 
@@ -258,21 +260,21 @@
         </div>
 
     <div id="drawers-container">
-        <div class="drawer-box" id="box-simple">
+        <div class="drawer-box" id="box-simple" onclick="handleZoneClick(this)">
             <h3 class="drawer-title">단순질식가스 (Simple asphyxiants)</h3>
-            <div id="cat-simple" class="drawer-content drop-zone" data-category="simple" ondragover="allowDrop(event)" ondrop="drop(event)" onclick="handleZoneClick(this)"></div>
+            <div id="cat-simple" class="drawer-content drop-zone" data-category="simple" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
         </div>
-        <div class="drawer-box" id="box-chemical">
+        <div class="drawer-box" id="box-chemical" onclick="handleZoneClick(this)">
             <h3 class="drawer-title">화학적 질식가스 (Chemical asphyxiants)</h3>
-            <div id="cat-chemical" class="drawer-content drop-zone" data-category="chemical" ondragover="allowDrop(event)" ondrop="drop(event)" onclick="handleZoneClick(this)"></div>
+            <div id="cat-chemical" class="drawer-content drop-zone" data-category="chemical" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
         </div>
-        <div class="drawer-box" id="box-irritant">
+        <div class="drawer-box" id="box-irritant" onclick="handleZoneClick(this)">
             <h3 class="drawer-title">점막자극가스 (Irritant inhalants)</h3>
-            <div id="cat-irritant" class="drawer-content drop-zone" data-category="irritant" ondragover="allowDrop(event)" ondrop="drop(event)" onclick="handleZoneClick(this)"></div>
+            <div id="cat-irritant" class="drawer-content drop-zone" data-category="irritant" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
         </div>
-        <div class="drawer-box" id="box-systemic">
+        <div class="drawer-box" id="box-systemic" onclick="handleZoneClick(this)">
             <h3 class="drawer-title">전신중독가스 (Systemic toxicants)</h3>
-            <div id="cat-systemic" class="drawer-content drop-zone" data-category="systemic" ondragover="allowDrop(event)" ondrop="drop(event)" onclick="handleZoneClick(this)"></div>
+            <div id="cat-systemic" class="drawer-content drop-zone" data-category="systemic" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
         </div>
     </div>
 
@@ -314,7 +316,7 @@
             { text: "Methyl bromide", category: "systemic" }
         ];
 
-        let selectedKeyword = null; // 클릭된 키워드를 저장하는 변수
+        let selectedKeyword = null;
 
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -342,45 +344,68 @@
                 div.id = 'word-' + index;
                 div.draggable = true;
                 div.ondragstart = drag;
-                div.onclick = handleKeywordClick; // 클릭 이벤트 연결
+                div.onclick = handleKeywordClick; 
+                div.ondblclick = handleKeywordDblClick; // 더블클릭 이벤트 추가
                 div.dataset.correctCategory = item.category;
                 div.innerText = item.text;
                 wordBank.appendChild(div);
             });
         }
 
-        // === 1. 클릭 앤 무브 처리 ===
+        // === 1. 클릭 / 더블클릭 처리 ===
         function handleKeywordClick(ev) {
-            ev.stopPropagation(); // 서랍(부모)으로 클릭 이벤트가 넘어가는 것 방지
+            ev.stopPropagation(); 
             const keyword = ev.target;
 
-            // 동일한 키워드를 다시 누르면 선택 취소
             if (selectedKeyword === keyword) {
                 keyword.classList.remove('selected');
                 selectedKeyword = null;
                 return;
             }
 
-            // 다른 키워드가 선택된 상태였다면 이전 선택 해제
             if (selectedKeyword) {
                 selectedKeyword.classList.remove('selected');
             }
 
-            // 새 키워드 선택
             selectedKeyword = keyword;
             keyword.classList.add('selected');
         }
 
-        function handleZoneClick(zone) {
-            // 선택된 키워드가 있을 때만 이동 처리
-            if (selectedKeyword) {
+        // 더블클릭 시 단어장으로 되돌리기
+        function handleKeywordDblClick(ev) {
+            ev.stopPropagation();
+            const keyword = ev.target;
+            const wordBank = document.getElementById('word-bank');
+
+            // 이미 단어장에 있다면 무시
+            if (keyword.parentElement === wordBank) return;
+
+            // 선택된 상태였다면 해제
+            if (selectedKeyword === keyword) {
+                selectedKeyword = null;
+            }
+
+            // 색상(채점 결과, 선택 상태) 초기화 및 단어장으로 이동
+            keyword.classList.remove('selected', 'correct', 'incorrect');
+            wordBank.appendChild(keyword);
+        }
+
+        function handleZoneClick(element) {
+            if (!selectedKeyword) return;
+            
+            let dropZone = element;
+            if (element.classList.contains('drawer-box')) {
+                dropZone = element.querySelector('.drop-zone');
+            }
+
+            if (dropZone) {
                 selectedKeyword.classList.remove('selected', 'correct', 'incorrect');
-                zone.appendChild(selectedKeyword);
+                dropZone.appendChild(selectedKeyword);
                 selectedKeyword = null;
             }
         }
 
-        // === 2. 드래그 앤 드롭 처리 (기존 기능 유지) ===
+        // === 2. 드래그 앤 드롭 처리 ===
         function allowDrop(ev) {
             ev.preventDefault();
         }
@@ -418,7 +443,6 @@
             let total = allKeywords.length;
             let unplacedCount = 0;
 
-            // 채점 시 현재 선택된 키워드가 있으면 해제
             if (selectedKeyword) {
                 selectedKeyword.classList.remove('selected');
                 selectedKeyword = null;
