@@ -69,11 +69,11 @@
 <meta property="og:description" content="독성 가스 분류 학습 툴"/>
 <title>독성 가스 분류</title>
 <meta name="description" content="독성 가스 분류 학습 툴"/>
-<meta property="og:image" content="https://jinyizan.github.io/toxicgas/og-image-00ese0gx.png"/>
+<meta property="og:image" content="https://jinyizan.github.io/toxicgas/og-image-00iuiowl.png"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:image" content="https://jinyizan.github.io/toxicgas/og-image-00ese0gx.png"/>
+<meta name="twitter:image" content="https://jinyizan.github.io/toxicgas/og-image-00iuiowl.png"/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2032%2032'%3E%3Crect%20width%3D'32'%20height%3D'32'%20rx%3D'6'%20fill%3D'%2310b981'%2F%3E%3Ctext%20x%3D'16'%20y%3D'22'%20text-anchor%3D'middle'%20font-size%3D'18'%20fill%3D'white'%20font-family%3D'sans-serif'%3E%E2%98%A0%3C%2Ftext%3E%3C%2Fsvg%3E"/>
 <script src="https://cdn.tailwindcss.com"></script>
 </head><body><!DOCTYPE html>
@@ -120,7 +120,7 @@
             cursor: pointer;
         }
 
-        /* 서랍(분류) 영역 */
+        /* 서랍(분류) 영역 - 6개로 변경 (2열 3행) */
         #drawers-container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -145,12 +145,13 @@
             padding: 10px;
             text-align: center;
             font-weight: bold;
+            font-size: 15px;
             margin: 0;
             cursor: pointer;
         }
         .drawer-content {
             flex-grow: 1;
-            min-height: 150px;
+            min-height: 120px;
             padding: 15px;
             display: flex;
             flex-wrap: wrap;
@@ -159,18 +160,23 @@
         }
 
         /* 서랍별 색상 테마 적용 */
+        
+        /* 1. 단순질식가스 (파랑) */
         #box-simple { border-color: #3498db; }
         #box-simple .drawer-title { background-color: #3498db; }
         #box-simple .drawer-content { background-color: #ebf5fb; }
 
-        #box-chemical { border-color: #e74c3c; }
-        #box-chemical .drawer-title { background-color: #e74c3c; }
-        #box-chemical .drawer-content { background-color: #fdedec; }
+        /* 2. 화학적 질식가스 그룹 (빨강 동일 적용) */
+        #box-anemic, #box-histotoxic { border-color: #e74c3c; }
+        #box-anemic .drawer-title, #box-histotoxic .drawer-title { background-color: #e74c3c; }
+        #box-anemic .drawer-content, #box-histotoxic .drawer-content { background-color: #fdedec; }
 
-        #box-irritant { border-color: #f39c12; }
-        #box-irritant .drawer-title { background-color: #f39c12; }
-        #box-irritant .drawer-content { background-color: #fef5e7; }
+        /* 3. 점막자극가스 그룹 (주황 동일 적용) */
+        #box-soluble, #box-insoluble { border-color: #f39c12; }
+        #box-soluble .drawer-title, #box-insoluble .drawer-title { background-color: #f39c12; }
+        #box-soluble .drawer-content, #box-insoluble .drawer-content { background-color: #fef5e7; }
 
+        /* 4. 전신중독가스 (보라) */
         #box-systemic { border-color: #9b59b6; }
         #box-systemic .drawer-title { background-color: #9b59b6; }
         #box-systemic .drawer-content { background-color: #f5eef8; }
@@ -244,12 +250,13 @@
             color: #2c3e50;
             text-align: center;
             line-height: 1.5;
+            padding-bottom: 40px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Toxic Gas 분류 학습 툴 🧪</h1>
+    <h1>Toxic Gas 세부 분류 학습 툴 🧪</h1>
     <p class="instructions">
         👉 <strong>이동:</strong> 키워드를 <strong>클릭</strong>하여 선택한 뒤, 넣고 싶은 <strong>서랍을 클릭</strong>하세요.<br>
         💡 <strong>취소:</strong> 서랍에 넣은 키워드를 <strong>더블클릭</strong>하면 다시 단어장으로 돌아옵니다.<br>
@@ -260,22 +267,37 @@
         </div>
 
     <div id="drawers-container">
+        
         <div class="drawer-box" id="box-simple" onclick="handleZoneClick(this)">
             <h3 class="drawer-title">단순질식가스 (Simple asphyxiants)</h3>
             <div id="cat-simple" class="drawer-content drop-zone" data-category="simple" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
         </div>
-        <div class="drawer-box" id="box-chemical" onclick="handleZoneClick(this)">
-            <h3 class="drawer-title">화학적 질식가스 (Chemical asphyxiants)</h3>
-            <div id="cat-chemical" class="drawer-content drop-zone" data-category="chemical" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+        
+        <div class="drawer-box" id="box-anemic" onclick="handleZoneClick(this)">
+            <h3 class="drawer-title">빈혈성 무산소증 (Anemic anoxia)</h3>
+            <div id="cat-anemic" class="drawer-content drop-zone" data-category="anemic" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
         </div>
-        <div class="drawer-box" id="box-irritant" onclick="handleZoneClick(this)">
-            <h3 class="drawer-title">점막자극가스 (Irritant inhalants)</h3>
-            <div id="cat-irritant" class="drawer-content drop-zone" data-category="irritant" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+
+        <div class="drawer-box" id="box-histotoxic" onclick="handleZoneClick(this)">
+            <h3 class="drawer-title">조직독성 무산소증 (Histotoxic anoxia)</h3>
+            <div id="cat-histotoxic" class="drawer-content drop-zone" data-category="histotoxic" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
         </div>
+
+        <div class="drawer-box" id="box-soluble" onclick="handleZoneClick(this)">
+            <h3 class="drawer-title">수용성 물질 (Water soluble inhalants)</h3>
+            <div id="cat-soluble" class="drawer-content drop-zone" data-category="soluble" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+        </div>
+
+        <div class="drawer-box" id="box-insoluble" onclick="handleZoneClick(this)">
+            <h3 class="drawer-title">불용성 물질 (Water insoluble inhalants)</h3>
+            <div id="cat-insoluble" class="drawer-content drop-zone" data-category="insoluble" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+        </div>
+
         <div class="drawer-box" id="box-systemic" onclick="handleZoneClick(this)">
             <h3 class="drawer-title">전신중독가스 (Systemic toxicants)</h3>
             <div id="cat-systemic" class="drawer-content drop-zone" data-category="systemic" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
         </div>
+
     </div>
 
     <div class="controls">
@@ -286,33 +308,36 @@
     <div id="result-text"></div>
 
     <script>
+        // 새로운 데이터베이스 적용
         const gasData = [
-            // 단순질식가스 (5)
+            // 1. 단순질식가스
             { text: "Argon", category: "simple" },
             { text: "Carbon dioxide", category: "simple" },
             { text: "Freon", category: "simple" },
             { text: "Methane", category: "simple" },
             { text: "Nitrogen", category: "simple" },
-            // 화학적 질식가스 (9)
-            { text: "Carbon monoxide", category: "chemical" },
-            { text: "Aniline", category: "chemical" },
-            { text: "O-toluidine", category: "chemical" },
-            { text: "Nitrite & Nitrate", category: "chemical" },
-            { text: "Nitrobenzene", category: "chemical" },
-            { text: "Nitrotoluene", category: "chemical" },
-            { text: "Naphthalene", category: "chemical" },
-            { text: "Hydrogen sulfide", category: "chemical" },
-            { text: "Cyanide", category: "chemical" },
-            // 점막자극가스 (8)
-            { text: "Chlorine", category: "irritant" },
-            { text: "H2SO4", category: "irritant" },
-            { text: "Ammonia", category: "irritant" },
-            { text: "Fluorine", category: "irritant" },
-            { text: "Formaldehyde", category: "irritant" },
-            { text: "Phosgene", category: "irritant" },
-            { text: "Ozone", category: "irritant" },
-            { text: "NOx", category: "irritant" },
-            // 전신중독가스 (1)
+            // 2. 빈혈성 무산소증
+            { text: "Carbon monoxide", category: "anemic" },
+            { text: "Aniline", category: "anemic" },
+            { text: "O-toluidine", category: "anemic" },
+            { text: "Nitrite & Nitrate", category: "anemic" },
+            { text: "Nitrobenzene", category: "anemic" },
+            { text: "Nitrotoluene", category: "anemic" },
+            { text: "Naphthalene", category: "anemic" },
+            // 3. 조직독성 무산소증
+            { text: "Hydrogen sulfide(H2S)", category: "histotoxic" },
+            { text: "Cyanide", category: "histotoxic" },
+            // 4. 수용성 물질
+            { text: "Chlorine", category: "soluble" },
+            { text: "H2SO4", category: "soluble" },
+            { text: "Ammonia", category: "soluble" },
+            { text: "Fluorine", category: "soluble" },
+            { text: "Formaldehyde", category: "soluble" },
+            // 5. 불용성 물질
+            { text: "Phosgene", category: "insoluble" },
+            { text: "Ozone", category: "insoluble" },
+            { text: "NOx", category: "insoluble" },
+            // 6. 전신중독가스
             { text: "Methyl bromide", category: "systemic" }
         ];
 
@@ -345,7 +370,7 @@
                 div.draggable = true;
                 div.ondragstart = drag;
                 div.onclick = handleKeywordClick; 
-                div.ondblclick = handleKeywordDblClick; // 더블클릭 이벤트 추가
+                div.ondblclick = handleKeywordDblClick; 
                 div.dataset.correctCategory = item.category;
                 div.innerText = item.text;
                 wordBank.appendChild(div);
@@ -371,21 +396,17 @@
             keyword.classList.add('selected');
         }
 
-        // 더블클릭 시 단어장으로 되돌리기
         function handleKeywordDblClick(ev) {
             ev.stopPropagation();
             const keyword = ev.target;
             const wordBank = document.getElementById('word-bank');
 
-            // 이미 단어장에 있다면 무시
             if (keyword.parentElement === wordBank) return;
 
-            // 선택된 상태였다면 해제
             if (selectedKeyword === keyword) {
                 selectedKeyword = null;
             }
 
-            // 색상(채점 결과, 선택 상태) 초기화 및 단어장으로 이동
             keyword.classList.remove('selected', 'correct', 'incorrect');
             wordBank.appendChild(keyword);
         }
