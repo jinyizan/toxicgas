@@ -1,0 +1,470 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><script>
+(function(){
+  var __k="aae47258-3d5a-4489-8b6f-106bd58393f9";
+  var __a=null;
+  var __preload=null;
+  if(!__k)return;
+  var _f=window.fetch;
+  // S3 URL → file_key 추출 후 __a 매핑 lookup → assets/ 로컬 경로 치환
+  // 응답에 새 signed URL이 와도 같은 file_key면 같은 assets/ → 영구 작동
+  function patchUrls(data){
+    if(!__a)return data;
+    try{
+      var s=JSON.stringify(data);
+      // 응답 안의 모든 S3 URL을 정규식으로 찾고, file_key 추출 → 매핑 lookup
+      s=s.replace(/https:\/\/prod-files-secure\.s3\.amazonaws\.com\/[^"\s<>]+/g,function(url){
+        var m=url.match(/\.amazonaws\.com\/([^?\\]+)/);
+        if(!m)return url;
+        var key=m[1].replace(/\\u002F/g,"/");
+        return __a[key]||url;
+      });
+      return JSON.parse(s);
+    }catch(e){return data;}
+  }
+  function callMisiso(method,path,body){
+    return _f("https://misiso.com/api/notion/deploy-proxy",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({deployKey:__k,path:path,method:method,body:body})
+    }).then(function(r){
+      var status=r.status;
+      return r.json().then(function(data){return {status:status,data:patchUrls(data)};});
+    });
+  }
+  // preload pattern — 페이지 로드와 병렬로 정적 fetch 호출 미리 시작
+  var __preloadCache={};
+  if(__preload){
+    for(var i=0;i<__preload.length;i++){
+      (function(c){
+        var key=c.method+":"+c.path+":"+(c.body?JSON.stringify(c.body):"");
+        __preloadCache[key]=callMisiso(c.method,c.path,c.body);
+      })(__preload[i]);
+    }
+  }
+  window.fetch=function(url,opts){
+    var u=typeof url==="string"?url:String(url);
+    if(!u.startsWith("/api/notion/"))return _f.apply(this,arguments);
+    var path=u.slice("/api/notion".length);
+    var method=(opts&&opts.method)||"GET";
+    var body;
+    try{body=opts&&opts.body?JSON.parse(opts.body):undefined;}catch(e){body=opts&&opts.body;}
+    var ck=method+":"+path+":"+(body?JSON.stringify(body):"");
+    var promise=__preloadCache[ck];
+    if(promise){delete __preloadCache[ck];}
+    else{promise=callMisiso(method,path,body);}
+    return promise.then(function(res){
+      return new Response(JSON.stringify(res.data),{
+        status:res.status,
+        headers:{"Content-Type":"application/json"}
+      });
+    });
+  };
+})();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://misiso.com" crossorigin/>
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="독성 가스 분류"/>
+<meta property="og:description" content="독성 가스 분류 학습 툴"/>
+<title>독성 가스 분류</title>
+<meta name="description" content="독성 가스 분류 학습 툴"/>
+<meta property="og:image" content="https://jinyizan.github.io/toxicgas/og-image-00qgn4h6.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://jinyizan.github.io/toxicgas/og-image-00qgn4h6.png"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2032%2032'%3E%3Crect%20width%3D'32'%20height%3D'32'%20rx%3D'6'%20fill%3D'%2310b981'%2F%3E%3Ctext%20x%3D'16'%20y%3D'22'%20text-anchor%3D'middle'%20font-size%3D'18'%20fill%3D'white'%20font-family%3D'sans-serif'%3E%E2%98%A0%3C%2Ftext%3E%3C%2Fsvg%3E"/>
+<script src="https://cdn.tailwindcss.com"></script>
+</head><body><!DOCTYPE html>
+<html lang="ko">
+<head>
+    
+    
+    
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .instructions {
+            margin-bottom: 20px;
+            color: #555;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        /* 단어장 영역 */
+        #word-bank {
+            width: 100%;
+            max-width: 900px;
+            min-height: 100px;
+            background-color: #fff;
+            border: 2px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        /* 서랍(분류) 영역 */
+        #drawers-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 30px;
+        }
+        
+        .drawer-box {
+            background-color: #fff;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 2px solid;
+        }
+        .drawer-title {
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin: 0;
+        }
+        .drawer-content {
+            flex-grow: 1;
+            min-height: 150px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        /* 서랍별 색상 테마 적용 */
+        #box-simple { border-color: #3498db; }
+        #box-simple .drawer-title { background-color: #3498db; }
+        #box-simple .drawer-content { background-color: #ebf5fb; }
+
+        #box-chemical { border-color: #e74c3c; }
+        #box-chemical .drawer-title { background-color: #e74c3c; }
+        #box-chemical .drawer-content { background-color: #fdedec; }
+
+        #box-irritant { border-color: #f39c12; }
+        #box-irritant .drawer-title { background-color: #f39c12; }
+        #box-irritant .drawer-content { background-color: #fef5e7; }
+
+        #box-systemic { border-color: #9b59b6; }
+        #box-systemic .drawer-title { background-color: #9b59b6; }
+        #box-systemic .drawer-content { background-color: #f5eef8; }
+
+        /* 키워드(단어) 스타일 - 가독성 향상 */
+        .keyword {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #bdc3c7;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.1s ease-in-out;
+        }
+        .keyword:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #95a5a6;
+        }
+        
+        /* 키워드 선택되었을 때 스타일 (클릭) */
+        .keyword.selected {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+            z-index: 10;
+        }
+
+        /* 채점 결과 스타일 */
+        .keyword.correct {
+            background-color: #28a745 !important;
+            border-color: #218838 !important;
+            color: white !important;
+        }
+        .keyword.incorrect {
+            background-color: #dc3545 !important;
+            border-color: #c82333 !important;
+            color: white !important;
+        }
+
+        /* 버튼 영역 */
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #grade-btn { background-color: #27ae60; }
+        #grade-btn:hover { background-color: #2ecc71; }
+        #reset-btn { background-color: #95a5a6; }
+        #reset-btn:hover { background-color: #7f8c8d; }
+        
+        #result-text {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Toxic Gas 분류 학습 툴 🧪</h1>
+    <p class="instructions">
+        👉 <strong>이동 방법:</strong> 키워드를 <strong>클릭</strong>하여 선택한 뒤, 넣고 싶은 서랍을 <strong>클릭</strong>하세요. (드래그 앤 드롭도 가능합니다!)<br>
+        분류 도중 언제든지 <strong>[채점하기]</strong> 버튼을 눌러 중간 점검을 할 수 있습니다.
+    </p>
+
+    <div id="word-bank" class="drop-zone" ondragover="allowDrop(event)" ondrop="drop(event)" onclick="handleZoneClick(this)">
+        </div>
+
+    <div id="drawers-container">
+        <div class="drawer-box" id="box-simple">
+            <h3 class="drawer-title">단순질식가스 (Simple asphyxiants)</h3>
+            <div id="cat-simple" class="drawer-content drop-zone" data-category="simple" ondragover="allowDrop(event)" ondrop="drop(event)" onclick="handleZoneClick(this)"></div>
+        </div>
+        <div class="drawer-box" id="box-chemical">
+            <h3 class="drawer-title">화학적 질식가스 (Chemical asphyxiants)</h3>
+            <div id="cat-chemical" class="drawer-content drop-zone" data-category="chemical" ondragover="allowDrop(event)" ondrop="drop(event)" onclick="handleZoneClick(this)"></div>
+        </div>
+        <div class="drawer-box" id="box-irritant">
+            <h3 class="drawer-title">점막자극가스 (Irritant inhalants)</h3>
+            <div id="cat-irritant" class="drawer-content drop-zone" data-category="irritant" ondragover="allowDrop(event)" ondrop="drop(event)" onclick="handleZoneClick(this)"></div>
+        </div>
+        <div class="drawer-box" id="box-systemic">
+            <h3 class="drawer-title">전신중독가스 (Systemic toxicants)</h3>
+            <div id="cat-systemic" class="drawer-content drop-zone" data-category="systemic" ondragover="allowDrop(event)" ondrop="drop(event)" onclick="handleZoneClick(this)"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="grade-btn" onclick="grade()">✅ 채점하기</button>
+        <button id="reset-btn" onclick="initGame()">🔄 다시하기</button>
+    </div>
+
+    <div id="result-text"></div>
+
+    <script>
+        const gasData = [
+            // 단순질식가스 (5)
+            { text: "Argon", category: "simple" },
+            { text: "Carbon dioxide", category: "simple" },
+            { text: "Freon", category: "simple" },
+            { text: "Methane", category: "simple" },
+            { text: "Nitrogen", category: "simple" },
+            // 화학적 질식가스 (9)
+            { text: "Carbon monoxide", category: "chemical" },
+            { text: "Aniline", category: "chemical" },
+            { text: "O-toluidine", category: "chemical" },
+            { text: "Nitrite & Nitrate", category: "chemical" },
+            { text: "Nitrobenzene", category: "chemical" },
+            { text: "Nitrotoluene", category: "chemical" },
+            { text: "Naphthalene", category: "chemical" },
+            { text: "Hydrogen sulfide", category: "chemical" },
+            { text: "Cyanide", category: "chemical" },
+            // 점막자극가스 (8)
+            { text: "Chlorine", category: "irritant" },
+            { text: "H2SO4", category: "irritant" },
+            { text: "Ammonia", category: "irritant" },
+            { text: "Fluorine", category: "irritant" },
+            { text: "Formaldehyde", category: "irritant" },
+            { text: "Phosgene", category: "irritant" },
+            { text: "Ozone", category: "irritant" },
+            { text: "NOx", category: "irritant" },
+            // 전신중독가스 (1)
+            { text: "Methyl bromide", category: "systemic" }
+        ];
+
+        let selectedKeyword = null; // 클릭된 키워드를 저장하는 변수
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function initGame() {
+            const wordBank = document.getElementById('word-bank');
+            const drawers = document.querySelectorAll('.drawer-content');
+            const resultText = document.getElementById('result-text');
+            
+            wordBank.innerHTML = '';
+            drawers.forEach(drawer => drawer.innerHTML = '');
+            resultText.innerHTML = '';
+            selectedKeyword = null;
+
+            let shuffledData = [...gasData];
+            shuffle(shuffledData);
+
+            shuffledData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.classList.add('keyword');
+                div.id = 'word-' + index;
+                div.draggable = true;
+                div.ondragstart = drag;
+                div.onclick = handleKeywordClick; // 클릭 이벤트 연결
+                div.dataset.correctCategory = item.category;
+                div.innerText = item.text;
+                wordBank.appendChild(div);
+            });
+        }
+
+        // === 1. 클릭 앤 무브 처리 ===
+        function handleKeywordClick(ev) {
+            ev.stopPropagation(); // 서랍(부모)으로 클릭 이벤트가 넘어가는 것 방지
+            const keyword = ev.target;
+
+            // 동일한 키워드를 다시 누르면 선택 취소
+            if (selectedKeyword === keyword) {
+                keyword.classList.remove('selected');
+                selectedKeyword = null;
+                return;
+            }
+
+            // 다른 키워드가 선택된 상태였다면 이전 선택 해제
+            if (selectedKeyword) {
+                selectedKeyword.classList.remove('selected');
+            }
+
+            // 새 키워드 선택
+            selectedKeyword = keyword;
+            keyword.classList.add('selected');
+        }
+
+        function handleZoneClick(zone) {
+            // 선택된 키워드가 있을 때만 이동 처리
+            if (selectedKeyword) {
+                selectedKeyword.classList.remove('selected', 'correct', 'incorrect');
+                zone.appendChild(selectedKeyword);
+                selectedKeyword = null;
+            }
+        }
+
+        // === 2. 드래그 앤 드롭 처리 (기존 기능 유지) ===
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            if (selectedKeyword) {
+                selectedKeyword.classList.remove('selected');
+                selectedKeyword = null;
+            }
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+
+            if (!draggedElement) return;
+
+            let dropTarget = ev.target;
+            while (!dropTarget.classList.contains('drop-zone') && dropTarget !== document.body) {
+                dropTarget = dropTarget.parentElement;
+            }
+
+            if (dropTarget.classList.contains('drop-zone')) {
+                draggedElement.classList.remove('correct', 'incorrect', 'selected');
+                dropTarget.appendChild(draggedElement);
+            }
+        }
+
+        // === 3. 채점 기능 ===
+        function grade() {
+            const allKeywords = document.querySelectorAll('.keyword');
+            let score = 0;
+            let total = allKeywords.length;
+            let unplacedCount = 0;
+
+            // 채점 시 현재 선택된 키워드가 있으면 해제
+            if (selectedKeyword) {
+                selectedKeyword.classList.remove('selected');
+                selectedKeyword = null;
+            }
+
+            allKeywords.forEach(keyword => {
+                const currentContainer = keyword.parentElement;
+                const userCategory = currentContainer.dataset.category; 
+                const correctCategory = keyword.dataset.correctCategory;
+
+                keyword.classList.remove('correct', 'incorrect');
+
+                if (!userCategory) {
+                    unplacedCount++;
+                } else if (userCategory === correctCategory) {
+                    keyword.classList.add('correct');
+                    score++;
+                } else {
+                    keyword.classList.add('incorrect');
+                }
+            });
+
+            const resultText = document.getElementById('result-text');
+            let resultMsg = `🎯 총 ${total}개 중 <strong>${score}개</strong> 정답입니다!`;
+            
+            if (unplacedCount > 0) {
+                resultMsg += ` <span style="color:#7f8c8d;">(미분류: ${unplacedCount}개)</span>`;
+            }
+
+            if (score === total) {
+                resultText.style.color = "#27ae60";
+                resultMsg += "<br>완벽합니다! 모든 분류를 마쳤습니다. 🎉";
+            } else {
+                resultText.style.color = "#e74c3c";
+                if (unplacedCount > 0) {
+                    resultMsg += "<br>남은 가스를 마저 분류하거나, 빨간색으로 표시된 오답을 수정해 보세요.";
+                } else {
+                    resultMsg += "<br>빨간색으로 표시된 오답을 다시 확인해 보세요.";
+                }
+            }
+            
+            resultText.innerHTML = resultMsg;
+        }
+
+        window.onload = initGame;
+    </script>
+
+</body>
+</html></body></html>
